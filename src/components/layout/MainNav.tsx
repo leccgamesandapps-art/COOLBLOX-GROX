@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
-  Home, Compass, Gamepad2, Search, Users, MessageSquare,
-  Bell, User, Package, Heart, Clock, Coins, Settings,
-  PlusCircle, PenTool, LogOut, Menu, X
+  Home, Compass, Gamepad2, Users, MessageSquare,
+  User, Package, Heart, Coins, Settings,
+  PenTool, LogOut, Menu, X
 } from "lucide-react";
 import { useState } from "react";
 import { cn, formatCoins } from "@/lib/utils";
@@ -24,12 +24,10 @@ export function MainNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const user = session?.user;
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-surface-900 border-r border-slate-800 h-screen sticky top-0">
         <div className="p-4 border-b border-slate-800">
           <Link href="/main/main" className="flex items-center gap-2">
@@ -49,9 +47,7 @@ export function MainNav() {
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition",
-                  active
-                    ? "bg-cool-600/20 text-cool-400"
-                    : "text-slate-400 hover:bg-surface-800 hover:text-white"
+                  active ? "bg-cool-600/20 text-cool-400" : "text-slate-400 hover:bg-surface-800 hover:text-white"
                 )}
               >
                 <item.icon className="w-5 h-5" />
@@ -76,7 +72,6 @@ export function MainNav() {
           </div>
         </nav>
 
-        {/* User footer */}
         <div className="p-3 border-t border-slate-800">
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="w-9 h-9 rounded-full bg-cool-700 flex items-center justify-center text-sm font-bold">
@@ -90,7 +85,7 @@ export function MainNav() {
               </p>
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: "/index" })}
+              onClick={() => signOut({ callbackUrl: "/" })}
               className="p-2 rounded-lg text-slate-400 hover:bg-surface-800 hover:text-red-400 transition"
               title="Logout"
             >
@@ -100,7 +95,6 @@ export function MainNav() {
         </div>
       </aside>
 
-      {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface-900/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
         <Link href="/main/main" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-cool-600 flex items-center justify-center">
@@ -118,25 +112,16 @@ export function MainNav() {
         </div>
       </div>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/60" onClick={() => setMobileOpen(false)}>
           <div className="absolute right-0 top-0 bottom-0 w-72 bg-surface-900 p-4 pt-16" onClick={(e) => e.stopPropagation()}>
             <nav className="space-y-1">
               {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-300 hover:bg-surface-800"
-                >
+                <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-slate-300 hover:bg-surface-800">
                   <item.icon className="w-5 h-5" /> {item.label}
                 </Link>
               ))}
-              <button
-                onClick={() => signOut({ callbackUrl: "/index" })}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-400 w-full"
-              >
+              <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-400 w-full">
                 <LogOut className="w-5 h-5" /> Logout
               </button>
             </nav>
@@ -144,7 +129,6 @@ export function MainNav() {
         </div>
       )}
 
-      {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-900 border-t border-slate-800 flex justify-around py-2">
         {[navItems[0], navItems[1], navItems[2], navItems[5], { href: "/main/settings", label: "More", icon: Settings }].map((item) => (
           <Link key={item.href} href={item.href} className="flex flex-col items-center gap-0.5 px-2 py-1 text-xs text-slate-400">
