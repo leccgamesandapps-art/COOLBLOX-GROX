@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  coolbloxId    String    @unique // Unique CoolBlox User ID e.g. CB-XXXXXXXX
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String
+  displayName   String?
+  avatarUrl     String?
+  bio           String?
+  coolCoins     Int       @default(100)
+  isPremium     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  projects      Project[] @relation("ProjectOwner")
+  collaborations ProjectCollaborator[]
+  friends       Friendship[] @relation("UserFriends")
+  friendOf      Friendship[] @relation("FriendOf")
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  notifications Notification[]
+  favorites     Favorite[]
+  likes         Like[]
+  inventory     InventoryItem[]
+  transactions  Transaction[]
+
+  @@index([username])
+  @@index([coolbloxId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  thumbnail   String?
+  ownerId     String
+  visibility  String   @default("private") // private | unlisted | public
+  version     Int      @default(1)
+  sceneData   Json?    // Full 3D scene JSON
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  owner         User                 @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  collaborators ProjectCollaborator[]
+  gameVersions  GameVersion[]
+  favorites     Favorite[]
+
+  @@index([ownerId])
+  @@index([visibility])
+}
+
+model ProjectCollaborator {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      String   @default("editor") // owner | editor | viewer
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model GameVersion {
+  id          String   @id @default(cuid())
+  projectId   String
+  version     Int
+  sceneData   Json
+  thumbnail   String?
+  description String?
+  visibility  String   @default("public")
+  publishedAt DateTime @default(now())
+  isLatest    Boolean  @default(true)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  likes   Like[]
+
+  @@index([projectId])
+  @@index([isLatest])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  status    String   @default("pending") // pending | accepted | blocked
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([receiverId, read])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String?
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+model Like {
+  id            String   @id @default(cuid())
+  userId        String
+  gameVersionId String
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameVersion GameVersion @relation(fields: [gameVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameVersionId])
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  userId    String
+  itemType  String   // clothing | accessory | gear | asset
+  itemId    String
+  name      String
+  equipped  Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        String   // earn | spend | purchase | reward
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
