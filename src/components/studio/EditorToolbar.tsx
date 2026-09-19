@@ -3,9 +3,10 @@
 import { useEditorStore } from "@/store/editorStore";
 import {
   MousePointer2, Move, RotateCw, Maximize2, Plus, Trash2,
-  Copy, Save, Play, Square, Loader2
+  Copy, Save, Play, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PublishButton } from "./PublishButton";
 
 export function EditorToolbar({
   onSave,
@@ -45,12 +46,11 @@ export function EditorToolbar({
 
   return (
     <div className="h-12 bg-surface-900 border-b border-slate-800 flex items-center px-3 gap-2">
-      <span className="text-sm font-medium truncate max-w-[160px] hidden sm:block">{projectName}</span>
+      <span className="text-sm font-medium truncate max-w-[140px] hidden sm:block">{projectName}</span>
       {isDirty && <span className="text-xs text-amber-400">• Unsaved</span>}
 
       <div className="w-px h-6 bg-slate-700 mx-1" />
 
-      {/* Tools */}
       <div className="flex items-center gap-0.5 bg-surface-800 rounded-lg p-0.5">
         {tools.map((t) => (
           <button
@@ -99,6 +99,8 @@ export function EditorToolbar({
         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         Save
       </button>
+
+      <PublishButton />
 
       <button
         onClick={onPlay}
