@@ -95,7 +95,8 @@ export function PropertiesPanel() {
         </label>
         <label className="flex items-center gap-2 text-sm py-1">
           <input
-            type="checkbox"\tableofcontents checked={selected.visible}
+            type="checkbox"
+            checked={selected.visible}
             onChange={(e) => set("visible", e.target.checked)}
             className="rounded"
           />
