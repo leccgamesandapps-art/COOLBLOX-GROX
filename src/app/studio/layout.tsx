@@ -4,12 +4,8 @@ import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default async function StudioLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
+export default async function StudioLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session) redirect("/index");
+  if (!session) redirect("/");
   return <>{children}</>;
 }

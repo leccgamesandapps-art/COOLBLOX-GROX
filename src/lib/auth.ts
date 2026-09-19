@@ -8,11 +8,11 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60 // 30 days
+    maxAge: 30 * 24 * 60 * 60
   },
   pages: {
-    signIn: "/index",
-    error: "/index"
+    signIn: "/",
+    error: "/"
   },
   providers: [
     CredentialsProvider({
@@ -22,16 +22,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
-          return null;
-        }
+        if (!credentials?.username || !credentials?.password) return null;
 
         const user = await prisma.user.findFirst({
           where: {
-            OR: [
-              { username: credentials.username },
-              { email: credentials.username }
-            ]
+            OR: [{ username: credentials.username }, { email: credentials.username }]
           }
         });
 
