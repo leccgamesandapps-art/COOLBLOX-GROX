@@ -16,7 +16,6 @@
     "@prisma/client": "^6.1.0",
     "@react-three/drei": "^9.117.3",
     "@react-three/fiber": "^8.17.10",
-    "@react-three/gizmo": "^1.0.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
