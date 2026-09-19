@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { MainNav } from "@/components/layout/MainNav";
 
+export const dynamic = "force-dynamic";
+
 export default async function MainLayout({
   children
 }: {

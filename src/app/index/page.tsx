@@ -92,7 +92,6 @@ export default function IndexPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-surface-950 via-surface-900 to-cool-950 px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cool-600 mb-4 shadow-lg shadow-cool-600/30">
             <Gamepad2 className="w-9 h-9 text-white" />
@@ -100,17 +99,17 @@ export default function IndexPage() {
           <h1 className="text-3xl font-bold tracking-tight text-white">
             COOLBLOX<span className="text-cool-400">-GROX</span>
           </h1>
-          <p className="mt-2 text-slate-400 text-sm">
-            Create • Play • Share
-          </p>
+          <p className="mt-2 text-slate-400 text-sm">Create • Play • Share</p>
         </div>
 
-        {/* Card */}
         <div className="bg-surface-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl">
-          {/* Tabs */}
           <div className="flex gap-1 p-1 bg-surface-900 rounded-xl mb-6">
             <button
-              onClick={() => { setMode("login"); setError(""); }}
+              type="button"
+              onClick={() => {
+                setMode("login");
+                setError("");
+              }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${
                 mode === "login"
                   ? "bg-cool-600 text-white shadow"
@@ -120,7 +119,11 @@ export default function IndexPage() {
               Login
             </button>
             <button
-              onClick={() => { setMode("register"); setError(""); }}
+              type="button"
+              onClick={() => {
+                setMode("register");
+                setError("");
+              }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${
                 mode === "register"
                   ? "bg-cool-600 text-white shadow"
@@ -142,10 +145,15 @@ export default function IndexPage() {
             </div>
           )}
 
-          <form onSubmit={mode === "login" ? handleLogin : handleRegister} className="space-y-4">
+          <form
+            onSubmit={mode === "login" ? handleLogin : handleRegister}
+            className="space-y-4"
+          >
             {mode === "register" && (
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">Display Name</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">
+                  Display Name
+                </label>
                 <input
                   name="displayName"
                   value={form.displayName}
