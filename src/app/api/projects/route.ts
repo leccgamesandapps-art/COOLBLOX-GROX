@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createId } from "@/lib/ids";
 
 const BASEPLATE_SCENE = {
   objects: [
@@ -58,17 +59,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const name = body.name || "Untitled Project";
-    const template = body.template || "baseplate";
-
-    const sceneData = template === "baseplate" ? BASEPLATE_SCENE : BASEPLATE_SCENE;
+    const now = new Date();
 
     const project = await prisma.project.create({
       data: {
+        id: createId(),
         name,
         ownerId: session.user.id,
         visibility: "private",
-        sceneData,
-        settings: { maxPlayers: 20, genre: "sandbox" }
+        sceneData: BASEPLATE_SCENE,
+        settings: { maxPlayers: 20, genre: "sandbox" },
+        createdAt: now,
+        updatedAt: now
       }
     });
 
