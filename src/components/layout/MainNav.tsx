@@ -26,6 +26,10 @@ export function MainNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = session?.user;
 
+  // Hide all navigation while in-game (playing)
+  const isInGame = pathname?.startsWith("/main/game/") ?? false;
+  if (isInGame) return null;
+
   return (
     <>
       <aside className="hidden lg:flex flex-col w-64 bg-surface-900 border-r border-slate-800 h-screen sticky top-0">
