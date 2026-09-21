@@ -3,11 +3,13 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Grid } from "@react-three/drei";
 import Link from "next/link";
-import { ArrowLeft, Users, Maximize2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Users, Maximize2, Menu, X, RotateCcw, LogOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { gameInput } from "./inputStore";
 import { MobileControls } from "./MobileControls";
+import { useSession } from "next-auth/react";
 
 interface Props {
   sceneData: {
@@ -29,7 +31,7 @@ interface Props {
   mode?: "play" | "test";
 }
 
-function PlayerController() {
+function PlayerController({ resetToken }: { resetToken: number }) {
   const { camera } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const pos = useRef(new THREE.Vector3(0, 1.6, 8));
@@ -37,6 +39,19 @@ function PlayerController() {
   const pitch = useRef(0);
   const pointerLocked = useRef(false);
   const bodyRef = useRef<THREE.Mesh>(null);
+
+  // Reset player position when resetToken changes
+  useEffect(() => {
+    pos.current.set(0, 1.6, 8);
+    yaw.current = 0;
+    pitch.current = 0;
+    if (bodyRef.current) {
+      bodyRef.current.position.set(0, 0.9, 8);
+      bodyRef.current.rotation.y = 0;
+    }
+    camera.position.set(0, 1.6, 8);
+    camera.rotation.set(0, 0, 0);
+  }, [resetToken, camera]);
 
   useEffect(() => {
     gameInput.reset();
@@ -136,7 +151,15 @@ export function GamePlayer({
 }: Props) {
   const [isTouch, setIsTouch] = useState(false);
   const [hint, setHint] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [resetToken, setResetToken] = useState(0);
   const shellRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { data: session } = useSession();
+  const username = session?.user?.username || session?.user?.name || "You";
+
+  // Simple local player list (single player for now)
+  const players = [{ id: "local", name: username, isYou: true }];
 
   useEffect(() => {
     const coarse =
@@ -150,10 +173,26 @@ export function GamePlayer({
     );
   }, []);
 
+  // Esc opens/closes menu (and releases pointer lock)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "Escape") {
+        e.preventDefault();
+        if (document.pointerLockElement) {
+          document.exitPointerLock();
+        }
+        setMenuOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const onCanvasActivate = () => {
+    if (menuOpen) return;
     if (!isTouch) {
       shellRef.current?.requestPointerLock?.() || document.body.requestPointerLock?.();
-      setHint("WASD · Mouse look · Esc release · Shift sprint");
+      setHint("WASD · Mouse look · Esc menu · Shift sprint");
     }
   };
 
@@ -169,6 +208,24 @@ export function GamePlayer({
     }
   };
 
+  const handleReset = () => {
+    setResetToken((t) => t + 1);
+    setMenuOpen(false);
+    if (document.pointerLockElement) document.exitPointerLock();
+  };
+
+  const handleLeave = () => {
+    setMenuOpen(false);
+    if (document.pointerLockElement) document.exitPointerLock();
+    router.push(backHref);
+  };
+
+  const handleBack = () => {
+    setMenuOpen(false);
+    if (document.pointerLockElement) document.exitPointerLock();
+    router.push(backHref);
+  };
+
   return (
     <div
       ref={shellRef}
@@ -178,12 +235,14 @@ export function GamePlayer({
       {/* HUD */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-b from-black/80 to-transparent safe-top">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link
-            href={backHref}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
             className="p-2.5 sm:p-2 rounded-xl bg-black/50 hover:bg-black/70 text-white shrink-0"
+            title="Menu"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+            <Menu className="w-5 h-5" />
+          </button>
           <div className="min-w-0">
             <h1 className="font-semibold text-white text-sm truncate">{gameName}</h1>
             <p className="text-[11px] text-slate-300 truncate">
@@ -193,7 +252,7 @@ export function GamePlayer({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-xs text-white">
-            <Users className="w-3.5 h-3.5" /> 1
+            <Users className="w-3.5 h-3.5" /> {players.length}
           </div>
           <button
             type="button"
@@ -236,15 +295,85 @@ export function GamePlayer({
               </mesh>
             ))}
 
-          <PlayerController />
+          <PlayerController resetToken={resetToken} />
         </Canvas>
 
         <MobileControls />
       </div>
 
-      {!isTouch && (
+      {!isTouch && !menuOpen && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full bg-black/50 text-xs text-slate-300 pointer-events-none max-w-[90%] text-center">
           {hint}
+        </div>
+      )}
+
+      {/* Roblox-style Menu Overlay */}
+      {menuOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm mx-4 rounded-2xl bg-surface-900 border border-slate-700 shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+              <h2 className="font-bold text-white text-lg">Menu</h2>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                className="p-2 rounded-lg text-slate-400 hover:bg-surface-800 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Players list */}
+            <div className="px-4 py-3 border-b border-slate-800">
+              <p className="text-xs text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" /> Players ({players.length})
+              </p>
+              <ul className="space-y-1.5 max-h-40 overflow-y-auto">
+                {players.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-surface-800/60"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-cool-600 flex items-center justify-center text-xs font-bold text-white">
+                      {p.name[0]?.toUpperCase() || "?"}
+                    </div>
+                    <span className="text-sm text-white truncate">
+                      {p.name}
+                      {p.isYou && <span className="text-cool-400 text-xs ml-1">(You)</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div className="p-3 space-y-2">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-800 hover:bg-surface-700 text-white text-sm font-medium transition"
+              >
+                <RotateCcw className="w-5 h-5 text-amber-400" />
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={handleLeave}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-800 hover:bg-red-900/40 text-white text-sm font-medium transition"
+              >
+                <LogOut className="w-5 h-5 text-red-400" />
+                Leave
+              </button>
+              <button
+                type="button"
+                onClick={handleBack}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-cool-600 hover:bg-cool-500 text-white text-sm font-medium transition"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
