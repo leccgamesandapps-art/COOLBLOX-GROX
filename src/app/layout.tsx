@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -7,8 +7,25 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "COOLBLOX-GROX",
-  description: "Create, play, and share games. Original game platform by LEStudio.",
-  icons: { icon: "/favicon.ico" }
+  description: "Create, play, and share games on any device. Official platform by LEStudio.",
+  applicationName: "COOLBLOX-GROX",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "COOLBLOX-GROX"
+  },
+  formatDetection: {
+    telephone: false
+  }
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#0f172a"
 };
 
 export default function RootLayout({
@@ -18,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased overflow-x-hidden`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

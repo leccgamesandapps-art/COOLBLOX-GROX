@@ -3,44 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --border: #334155;
-  --text: #f1f5f9;
-  --muted: #94a3b8;
-  --accent: #0ea5e9;
-  --accent-hover: #0284c7;
-}
-
-html {
   color-scheme: dark;
 }
 
+html,
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
+  height: 100%;
+  overscroll-behavior: none;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Safe areas for notched phones */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
-::-webkit-scrollbar-track {
-  background: #0f172a;
-}
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Focus */
-*:focus-visible {
-  outline: 2px solid #0ea5e9;
-  outline-offset: 2px;
+/* Prevent accidental text selection / callouts during play */
+.touch-none {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth scrolling on main UI only */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }
