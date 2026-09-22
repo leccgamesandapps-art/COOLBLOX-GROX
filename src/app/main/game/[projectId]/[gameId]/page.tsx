@@ -4,13 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { GamePlayer } from "@/components/game/GamePlayer";
 
+export const dynamic = "force-dynamic";
+
 export default async function GamePlayPage({
   params
 }: {
   params: Promise<{ projectId: string; gameId: string }>;
 }) {
   const session = await getServerSession(authOptions);
-  if (!session) redirect("/index");
+  if (!session) redirect("/");
 
   const { projectId, gameId } = await params;
 
@@ -36,6 +38,8 @@ export default async function GamePlayPage({
       creator={version.project.owner.displayName || version.project.owner.username}
       projectId={projectId}
       gameId={gameId}
+      backHref="/main/main"
+      mode="play"
     />
   );
 }

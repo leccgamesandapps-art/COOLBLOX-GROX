@@ -2,9 +2,16 @@
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Grid } from "@react-three/drei";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Users, Maximize2, Menu, X, RotateCcw, LogOut } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  Maximize2,
+  Menu,
+  X,
+  RotateCcw,
+  LogOut
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { gameInput } from "./inputStore";
@@ -40,7 +47,6 @@ function PlayerController({ resetToken }: { resetToken: number }) {
   const pointerLocked = useRef(false);
   const bodyRef = useRef<THREE.Mesh>(null);
 
-  // Reset player position when resetToken changes
   useEffect(() => {
     pos.current.set(0, 1.6, 8);
     yaw.current = 0;
@@ -55,18 +61,13 @@ function PlayerController({ resetToken }: { resetToken: number }) {
 
   useEffect(() => {
     gameInput.reset();
-
     const down = (e: KeyboardEvent) => {
       keys.current[e.code] = true;
-      if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
-        gameInput.setMove({ sprint: true });
-      }
+      if (e.code === "ShiftLeft" || e.code === "ShiftRight") gameInput.setMove({ sprint: true });
     };
     const up = (e: KeyboardEvent) => {
       keys.current[e.code] = false;
-      if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
-        gameInput.setMove({ sprint: false });
-      }
+      if (e.code === "ShiftLeft" || e.code === "ShiftRight") gameInput.setMove({ sprint: false });
     };
     const move = (e: MouseEvent) => {
       if (!pointerLocked.current) return;
@@ -75,7 +76,6 @@ function PlayerController({ resetToken }: { resetToken: number }) {
     const lock = () => {
       pointerLocked.current = document.pointerLockElement != null;
     };
-
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("mousemove", move);
@@ -95,7 +95,6 @@ function PlayerController({ resetToken }: { resetToken: number }) {
     pitch.current -= look.dy * 0.0025;
     pitch.current = Math.max(-1.25, Math.min(1.25, pitch.current));
 
-    // Keyboard
     let kx = 0;
     let ky = 0;
     if (keys.current["KeyW"] || keys.current["ArrowUp"]) ky += 1;
@@ -103,7 +102,6 @@ function PlayerController({ resetToken }: { resetToken: number }) {
     if (keys.current["KeyA"] || keys.current["ArrowLeft"]) kx -= 1;
     if (keys.current["KeyD"] || keys.current["ArrowRight"]) kx += 1;
 
-    // Touch joystick
     const touch = gameInput.getMove();
     let mx = kx + touch.x;
     let my = ky + touch.y;
@@ -113,9 +111,9 @@ function PlayerController({ resetToken }: { resetToken: number }) {
       my /= mag;
     }
 
-    const sprint = keys.current["ShiftLeft"] || keys.current["ShiftRight"] || touch.sprint;
+    const sprint =
+      keys.current["ShiftLeft"] || keys.current["ShiftRight"] || touch.sprint;
     const speed = sprint ? 14 : 7;
-
     const forward = new THREE.Vector3(-Math.sin(yaw.current), 0, -Math.cos(yaw.current));
     const right = new THREE.Vector3(Math.cos(yaw.current), 0, -Math.sin(yaw.current));
 
@@ -157,8 +155,6 @@ export function GamePlayer({
   const router = useRouter();
   const { data: session } = useSession();
   const username = session?.user?.username || session?.user?.name || "You";
-
-  // Simple local player list (single player for now)
   const players = [{ id: "local", name: username, isYou: true }];
 
   useEffect(() => {
@@ -168,19 +164,16 @@ export function GamePlayer({
     setIsTouch(coarse);
     setHint(
       coarse
-        ? "Left stick move · Right pad look · RUN to sprint"
-        : "Click to capture mouse · WASD move · Mouse look · Shift sprint"
+        ? "Left stick · LOOK pad · Menu ☰"
+        : "Click canvas · WASD · Esc = Menu"
     );
   }, []);
 
-  // Esc opens/closes menu (and releases pointer lock)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
         e.preventDefault();
-        if (document.pointerLockElement) {
-          document.exitPointerLock();
-        }
+        if (document.pointerLockElement) document.exitPointerLock();
         setMenuOpen((v) => !v);
       }
     };
@@ -192,53 +185,51 @@ export function GamePlayer({
     if (menuOpen) return;
     if (!isTouch) {
       shellRef.current?.requestPointerLock?.() || document.body.requestPointerLock?.();
-      setHint("WASD · Mouse look · Esc menu · Shift sprint");
+      setHint("WASD · Mouse look · Esc Menu · Shift sprint");
     }
   };
 
   const goFullscreen = async () => {
     try {
-      if (!document.fullscreenElement) {
-        await shellRef.current?.requestFullscreen?.();
-      } else {
-        await document.exitFullscreen?.();
-      }
+      if (!document.fullscreenElement) await shellRef.current?.requestFullscreen?.();
+      else await document.exitFullscreen?.();
     } catch {
-      /* ignore */
+      /* */
     }
+  };
+
+  const closePointer = () => {
+    if (document.pointerLockElement) document.exitPointerLock();
   };
 
   const handleReset = () => {
     setResetToken((t) => t + 1);
     setMenuOpen(false);
-    if (document.pointerLockElement) document.exitPointerLock();
+    closePointer();
   };
 
   const handleLeave = () => {
     setMenuOpen(false);
-    if (document.pointerLockElement) document.exitPointerLock();
-    router.push(backHref);
-  };
-
-  const handleBack = () => {
-    setMenuOpen(false);
-    if (document.pointerLockElement) document.exitPointerLock();
+    closePointer();
     router.push(backHref);
   };
 
   return (
     <div
       ref={shellRef}
-      className="h-[100dvh] w-full flex flex-col bg-black overflow-hidden touch-none"
+      className="fixed inset-0 z-[200] h-[100dvh] w-full flex flex-col bg-black overflow-hidden touch-none"
       style={{ WebkitTouchCallout: "none" }}
     >
-      {/* HUD */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-b from-black/80 to-transparent safe-top">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* Minimal in-game HUD — NOT platform nav */}
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-b from-black/80 to-transparent safe-top pointer-events-none">
+        <div className="flex items-center gap-2 min-w-0 pointer-events-auto">
           <button
             type="button"
-            onClick={() => setMenuOpen(true)}
-            className="p-2.5 sm:p-2 rounded-xl bg-black/50 hover:bg-black/70 text-white shrink-0"
+            onClick={() => {
+              closePointer();
+              setMenuOpen(true);
+            }}
+            className="p-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-white shrink-0"
             title="Menu"
           >
             <Menu className="w-5 h-5" />
@@ -246,18 +237,18 @@ export function GamePlayer({
           <div className="min-w-0">
             <h1 className="font-semibold text-white text-sm truncate">{gameName}</h1>
             <p className="text-[11px] text-slate-300 truncate">
-              {mode === "test" ? "TEST MODE · " : ""}by {creator}
+              {mode === "test" ? "TEST · " : ""}by {creator}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-xs text-white">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/50 text-xs text-white">
             <Users className="w-3.5 h-3.5" /> {players.length}
           </div>
           <button
             type="button"
             onClick={goFullscreen}
-            className="p-2.5 rounded-xl bg-black/50 text-white"
+            className="p-2.5 rounded-xl bg-black/60 text-white"
             title="Fullscreen"
           >
             <Maximize2 className="w-5 h-5" />
@@ -265,7 +256,6 @@ export function GamePlayer({
         </div>
       </div>
 
-      {/* 3D */}
       <div className="flex-1 relative min-h-0" onClick={onCanvasActivate}>
         <Canvas
           camera={{ position: [0, 1.6, 8], fov: 70, near: 0.1, far: 500 }}
@@ -298,7 +288,7 @@ export function GamePlayer({
           <PlayerController resetToken={resetToken} />
         </Canvas>
 
-        <MobileControls />
+        {!menuOpen && <MobileControls />}
       </div>
 
       {!isTouch && !menuOpen && (
@@ -307,11 +297,10 @@ export function GamePlayer({
         </div>
       )}
 
-      {/* Roblox-style Menu Overlay */}
+      {/* In-game Menu — players, leave, reset, back */}
       {menuOpen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-sm mx-4 rounded-2xl bg-surface-900 border border-slate-700 shadow-2xl overflow-hidden">
-            {/* Header */}
+        <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm">
+          <div className="w-full sm:max-w-sm sm:mx-4 rounded-t-2xl sm:rounded-2xl bg-surface-900 border border-slate-700 shadow-2xl overflow-hidden mb-0">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
               <h2 className="font-bold text-white text-lg">Menu</h2>
               <button
@@ -323,7 +312,6 @@ export function GamePlayer({
               </button>
             </div>
 
-            {/* Players list */}
             <div className="px-4 py-3 border-b border-slate-800">
               <p className="text-xs text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" /> Players ({players.length})
@@ -339,38 +327,39 @@ export function GamePlayer({
                     </div>
                     <span className="text-sm text-white truncate">
                       {p.name}
-                      {p.isYou && <span className="text-cool-400 text-xs ml-1">(You)</span>}
+                      {p.isYou && (
+                        <span className="text-cool-400 text-xs ml-1">(You)</span>
+                      )}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Actions */}
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2 pb-safe">
               <button
                 type="button"
                 onClick={handleReset}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-800 hover:bg-surface-700 text-white text-sm font-medium transition"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-surface-800 hover:bg-surface-700 text-white text-sm font-medium"
               >
                 <RotateCcw className="w-5 h-5 text-amber-400" />
-                Reset
+                Reset character
               </button>
               <button
                 type="button"
                 onClick={handleLeave}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-800 hover:bg-red-900/40 text-white text-sm font-medium transition"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-surface-800 hover:bg-red-900/40 text-white text-sm font-medium"
               >
                 <LogOut className="w-5 h-5 text-red-400" />
-                Leave
+                Leave game
               </button>
               <button
                 type="button"
-                onClick={handleBack}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-cool-600 hover:bg-cool-500 text-white text-sm font-medium transition"
+                onClick={handleLeave}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-cool-600 hover:bg-cool-500 text-white text-sm font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
-                Back
+                Back to Home
               </button>
             </div>
           </div>

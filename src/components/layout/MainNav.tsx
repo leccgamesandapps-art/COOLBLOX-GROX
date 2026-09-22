@@ -26,13 +26,18 @@ export function MainNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = session?.user;
 
-  // Hide all navigation while in-game (playing)
-  const isInGame = pathname?.startsWith("/main/game/") ?? false;
-  if (isInGame) return null;
+  // Hide platform navigation while playing a published game
+  const isInGame =
+    typeof pathname === "string" &&
+    (pathname.startsWith("/main/game/") || pathname.includes("/main/game/"));
+
+  if (isInGame) {
+    return null;
+  }
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-64 bg-surface-900 border-r border-slate-800 h-screen sticky top-0">
+      <aside className="hidden lg:flex flex-col w-64 bg-surface-900 border-r border-slate-800 h-screen sticky top-0 z-40">
         <div className="p-4 border-b border-slate-800">
           <Link href="/main/main" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-cool-600 flex items-center justify-center">
@@ -99,7 +104,7 @@ export function MainNav() {
         </div>
       </aside>
 
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface-900/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-surface-900/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
         <Link href="/main/main" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-cool-600 flex items-center justify-center">
             <Gamepad2 className="w-4 h-4 text-white" />
@@ -133,7 +138,7 @@ export function MainNav() {
         </div>
       )}
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-900 border-t border-slate-800 flex justify-around py-2">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-900 border-t border-slate-800 flex justify-around py-2">
         {[navItems[0], navItems[1], navItems[2], navItems[5], { href: "/main/settings", label: "More", icon: Settings }].map((item) => (
           <Link key={item.href} href={item.href} className="flex flex-col items-center gap-0.5 px-2 py-1 text-xs text-slate-400">
             <item.icon className="w-5 h-5" />
