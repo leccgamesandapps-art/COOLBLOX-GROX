@@ -2,12 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { Play, Heart } from "lucide-react";
+import { Gamepad2 } from "lucide-react";
+import { GameCard, type GameCardData } from "@/components/ui/GameCard";
+
+export const dynamic = "force-dynamic";
 
 export default async function GamesPage() {
   const session = await getServerSession(authOptions);
-  if (!session) redirect("/index");
+  if (!session) redirect("/");
 
   let games: any[] = [];
   try {
@@ -22,34 +24,35 @@ export default async function GamesPage() {
     });
   } catch {}
 
+  const cards: GameCardData[] = games.map((g) => ({
+    id: g.id,
+    projectId: g.projectId,
+    name: g.project.name,
+    creator: g.project.owner.displayName || g.project.owner.username,
+    likes: g._count?.likes ?? 0,
+    thumbnail: g.thumbnail
+  }));
+
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Games</h1>
-      {games.length === 0 ? (
+    <div className="px-4 lg:px-8 max-w-7xl mx-auto py-4 lg:py-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+          <Gamepad2 className="w-5 h-5 text-emerald-400" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">Games</h1>
+          <p className="text-sm text-slate-400">{cards.length} public experiences</p>
+        </div>
+      </div>
+
+      {cards.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-700 p-12 text-center text-slate-400">
           No published games yet. Create one in Studio and hit Publish.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {games.map((g) => (
-            <Link
-              key={g.id}
-              href={`/main/game/${g.projectId}/${g.id}`}
-              className="rounded-2xl bg-surface-800 border border-slate-700 overflow-hidden hover:border-cool-500/50 transition"
-            >
-              <div className="aspect-video bg-surface-900 flex items-center justify-center">
-                <Play className="w-10 h-10 text-slate-600" />
-              </div>
-              <div className="p-3">
-                <h3 className="font-semibold truncate">{g.project.name}</h3>
-                <p className="text-xs text-slate-400">
-                  by {g.project.owner.displayName || g.project.owner.username}
-                </p>
-                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                  <Heart className="w-3 h-3" /> {g._count.likes}
-                </p>
-              </div>
-            </Link>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          {cards.map((g) => (
+            <GameCard key={g.id} game={g} />
           ))}
         </div>
       )}
